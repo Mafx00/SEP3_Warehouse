@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using SEP3_warehouseAPI.Models;
 
 namespace SEP3_warehouseAPI.Data
