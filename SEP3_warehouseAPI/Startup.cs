@@ -28,7 +28,7 @@ namespace SEP3_warehouseAPI
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-            //services.AddEntityFrameworkNpgsql().AddDbContext<Warehouse_Context>(opt => opt.UseNpgsql(Configuration.GetConnectionString("PostgresqlConnection")));
+            services.AddEntityFrameworkNpgsql().AddDbContext<Warehouse_Context>(opt => opt.UseNpgsql(Configuration.GetConnectionString("PostgresqlConnection")));
 
         }
 
