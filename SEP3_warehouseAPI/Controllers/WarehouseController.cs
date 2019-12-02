@@ -21,10 +21,25 @@ namespace SEP3_warehouseAPI.Controllers
             db = context;
         }
 
-        [HttpGet]
-        public IEnumerable<Item> Get()
+        [HttpPost]
+        public async Task<IActionResult> AddItems(long id, long warehouseId, int amount)
         {
-            return db.Items;
+            var item = await db.Items.FindAsync(id);
+
+            var itemUpdate = new Item
+            {
+                ItemId = id,
+                BarCode = item.BarCode,
+                Description = item.Description,
+                Stock = item.Stock + amount,
+                WarehouseId = warehouseId
+
+            };
+
+            db.Items.Add(itemUpdate);
+            await db.SaveChangesAsync();
+            return Ok();
         }
+
     }
 }
