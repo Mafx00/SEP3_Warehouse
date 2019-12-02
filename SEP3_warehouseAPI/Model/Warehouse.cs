@@ -11,7 +11,7 @@ namespace SEP3_warehouseAPI.Models
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int WarehouseId { get; set; }
+        public long WarehouseId { get; set; }
         public string Location { get; set; }
         public ICollection<Item> items { get; set; }
     }

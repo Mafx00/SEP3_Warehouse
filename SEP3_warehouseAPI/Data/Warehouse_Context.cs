@@ -6,8 +6,12 @@ namespace SEP3_warehouseAPI.Data
     public class Warehouse_Context : DbContext
 
     {
-            public DbSet<Item> Items { get; set; }
-            public DbSet<Warehouse> Warehouses { get; set; }
+        public Warehouse_Context(DbContextOptions<Warehouse_Context> options)
+            : base(options)
+        { }
+
+        public DbSet<Item> Items { get; set; }
+        public DbSet<Warehouse> Warehouses { get; set; }
  
     }
     }

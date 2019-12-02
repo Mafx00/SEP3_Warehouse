@@ -11,10 +11,11 @@ namespace SEP3_warehouseAPI.Models
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int ItemId { get; set; }
+        public long ItemId { get; set; }
         public string Name { get; set; }
+        public int Stock { get; set; }
         public int BarCode { get; set; }
         public string Description { get; set; }
-        public int WarehouseId { get; set; }
+        public long WarehouseId { get; set; }
     }
 }
