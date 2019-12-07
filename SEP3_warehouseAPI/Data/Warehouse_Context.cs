@@ -4,7 +4,6 @@ using SEP3_warehouseAPI.Models;
 namespace SEP3_warehouseAPI.Data
 {
     public class Warehouse_Context : DbContext
-
     {
         public Warehouse_Context(DbContextOptions<Warehouse_Context> options)
             : base(options)
@@ -12,6 +11,6 @@ namespace SEP3_warehouseAPI.Data
 
         public DbSet<Item> Items { get; set; }
         public DbSet<Warehouse> Warehouses { get; set; }
- 
+
     }
     }

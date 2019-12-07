@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using SEP3_warehouseAPI.Data;
+using SEP3_warehouseAPI.Model;
 using SEP3_warehouseAPI.Models;
 
 namespace SEP3_warehouseAPI.Controllers
@@ -21,24 +22,104 @@ namespace SEP3_warehouseAPI.Controllers
             db = context;
         }
 
-        [HttpPost]
-        public async Task<IActionResult> AddItems(long id, long warehouseId, int amount)
+        [HttpGet]
+        public string Get(Order order)
         {
-            var item = await db.Items.FindAsync(id);
+            
 
-            var itemUpdate = new Item
+           var missingitems = new List<Item>(); 
+
+            foreach (var item in order.items)
+            {
+                var i = db.Items.Find(item.ItemId);
+                if (i == null)
+                {
+                    missingitems.Add(new Item()
+                    {
+                        ItemId = item.ItemId,
+                        Stock = item.Stock,
+                        Description = item.Description,
+                        Name = item.Name,
+                        WarehouseId = item.WarehouseId,
+                        BarCode = item.BarCode,
+                }); 
+                    db.SaveChangesAsync();
+
+                    return "Couldn't find " + item.Name + ". Missing: " + item.Stock; 
+
+                }
+                int missing = 0;
+                if (i != null)
+                {
+                    missing = (item.Stock - i.Stock);
+                    i.Stock = 0;
+
+
+                    missingitems.Add(new Item()
+                    {
+                        ItemId = item.ItemId,
+                        Stock = missing,
+                        Description = item.Description,
+                        Name = item.Name,
+                        WarehouseId = item.WarehouseId,
+                        BarCode = item.BarCode
+
+                    });
+                    db.SaveChangesAsync();
+
+                    return "Missing " + missing + " of item " + item.Stock;
+                }
+
+                else
+                {
+                    i.Stock -= item.Stock;
+                    db.SaveChangesAsync();
+
+                    return item.Name + " successfully ordered";
+                }
+
+                }
+                return " ";
+
+        }
+
+          /*  if (missingitems == null)
+                return "Order Sucsseful";
+            else
+                foreach (var item in missingitems)
+                    return "Couldn't return " + item.Stock + " of item: " + item.Name; */
+            
+
+        [HttpPost]
+        public async void AddItem(int id, int barCode, string Description, int warehouseId, int stock)
+        {
+            Item i = db.Items.Find(id);
+
+        if (i == null)
+
+            db.Add(new Item()
             {
                 ItemId = id,
-                BarCode = item.BarCode,
-                Description = item.Description,
-                Stock = item.Stock + amount,
+                BarCode = barCode,
+                Description = Description,
+                Stock = stock,
                 WarehouseId = warehouseId
 
-            };
+            });
 
-            db.Items.Add(itemUpdate);
-            await db.SaveChangesAsync();
-            return Ok();
+        else
+        {
+                i.Stock += stock;
+
+                await db.SaveChangesAsync();
+
+         }
+        }
+
+        public IList<Item> ShowAllItems()
+        {
+            return (IList<Item>) db.Items;
+            
         }
 
     }
