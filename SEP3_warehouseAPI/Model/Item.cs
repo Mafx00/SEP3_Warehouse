@@ -16,7 +16,6 @@ namespace SEP3_warehouseAPI.Models
         public int Stock { get; set; }
         public int BarCode { get; set; }
         public string Description { get; set; }
-        public long WarehouseId { get; set; }
 
     }
 }

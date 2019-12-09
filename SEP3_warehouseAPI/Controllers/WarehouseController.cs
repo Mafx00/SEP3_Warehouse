@@ -40,7 +40,6 @@ namespace SEP3_warehouseAPI.Controllers
                         Stock = item.Stock,
                         Description = item.Description,
                         Name = item.Name,
-                        WarehouseId = item.WarehouseId,
                         BarCode = item.BarCode,
                 }); 
                     db.SaveChangesAsync();
@@ -61,7 +60,7 @@ namespace SEP3_warehouseAPI.Controllers
                         Stock = missing,
                         Description = item.Description,
                         Name = item.Name,
-                        WarehouseId = item.WarehouseId,
+                        
                         BarCode = item.BarCode
 
                     });
@@ -91,19 +90,18 @@ namespace SEP3_warehouseAPI.Controllers
             
 
         [HttpPost]
-        public async void AddItem(int id, int barCode, string Description, int warehouseId, int stock)
+        public async void AddItem(int barCode, string Description, int stock)
         {
-            Item i = db.Items.Find(id);
+            Item i = db.Items.Find(barCode);
 
         if (i == null)
 
             db.Add(new Item()
             {
-                ItemId = id,
                 BarCode = barCode,
                 Description = Description,
                 Stock = stock,
-                WarehouseId = warehouseId
+              
 
             });
 
