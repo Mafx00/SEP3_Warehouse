@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using SEP3_warehouseAPI.Data;
 using SEP3_warehouseAPI.Model;
 using SEP3_warehouseAPI.Models;
 
