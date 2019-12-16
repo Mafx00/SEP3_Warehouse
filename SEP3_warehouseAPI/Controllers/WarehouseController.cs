@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
+using System.Text.Json.Serialization;
 using SEP3_warehouseAPI.Data;
 using SEP3_warehouseAPI.Model;
-using SEP3_warehouseAPI.Models;
+using System.Text.Json;
 
 namespace SEP3_warehouseAPI.Controllers
 {
@@ -22,102 +22,122 @@ namespace SEP3_warehouseAPI.Controllers
             db = context;
         }
 
-        [HttpGet]
-        public string Get(Order order)
-        {
+        [ProducesResponseType(typeof(CheckOrderResponse), 200)]
+        [HttpPost("checkOrder")]
+        public Order Get([FromBody]Order order)
+        {   
             
+            string json = JsonSerializer.Serialize(order.orderedItems);
+            IEnumerable<WarehouseItem> itemsordered = JsonSerializer.Deserialize<IEnumerable<WarehouseItem>>(json);
 
-           var missingitems = new List<Item>(); 
+            //  IEnumerable<int?> itemsordered = JsonSerializer.Deserialize<Items>(json.ToString()).items.Select(i=>i.barcode);
 
-            foreach (var item in order.items)
+            var missingitems = new List<WarehouseItem>();
+
+            foreach (var item in itemsordered)
             {
-                var i = db.Items.Find(item.ItemId);
+                WarehouseItem i = db.Stock.Where(b=>b.barcode == (int)item.barcode).SingleOrDefault();
+               
                 if (i == null)
                 {
-                    missingitems.Add(new Item()
-                    {
-                        ItemId = item.ItemId,
-                        Stock = item.Stock,
-                        Description = item.Description,
-                        Name = item.Name,
-                        BarCode = item.BarCode,
-                }); 
-                    db.SaveChangesAsync();
-
-                    return "Couldn't find " + item.Name + ". Missing: " + item.Stock; 
-
+                    missingitems.Add(new WarehouseItem()
+                    {        
+                        amount = i.amount,
+                        description = i.description,
+                        name = i.name,
+                        barcode = i.barcode,
+                    });
                 }
-                int missing = 0;
                 if (i != null)
                 {
-                    missing = (item.Stock - i.Stock);
-                    i.Stock = 0;
-
-
-                    missingitems.Add(new Item()
+                    int? missing = item.barcode =- i.amount;
+                    if (missing > 0)
                     {
-                        ItemId = item.ItemId,
-                        Stock = missing,
-                        Description = item.Description,
-                        Name = item.Name,
-                        
-                        BarCode = item.BarCode
+                        i.amount = 0;
+                        missingitems.Add(new WarehouseItem()
+                        {
+                            id = item.id,
+                           amount = missing,
+                            description = item.description,
+                            name = item.name,
+                            barcode = item.barcode
 
-                    });
-                    db.SaveChangesAsync();
-
-                    return "Missing " + missing + " of item " + item.Stock;
+                        });
+                    }
+                    else
+                    {
+                        //enough items available
+                        i.amount -= item.amount;
+                        db.SaveChangesAsync();
+                    }
                 }
+            }
 
-                else
+            order.orderInfo = ToStringOrder(missingitems);
+            return order;
+        }
+
+        [HttpPost("restock")]
+        public String AddItem(int id, int barCode, string name, string Description, int stock)
+        {
+            WarehouseItem i = db.Stock.Find(barCode);
+
+            if (i == null)
+
+                db.Add(new WarehouseItem()
                 {
-                    i.Stock -= item.Stock;
-                    db.SaveChangesAsync();
+                    name = name,
+                    barcode = barCode,
+                    description = Description,
+                    amount = stock,
 
-                    return item.Name + " successfully ordered";
-                }
 
-                }
-                return " ";
+                });
+
+            else
+            {
+                i.amount += stock;
+
+                db.SaveChangesAsync();
+
+            }
+
+            return "successful";
+        }
+        [HttpGet("getAll")]
+        public IList<WarehouseItem> ShowAllItems()
+        {
+            return (IList<WarehouseItem>)db.Stock;
 
         }
 
-          /*  if (missingitems == null)
-                return "Order Sucsseful";
-            else
-                foreach (var item in missingitems)
-                    return "Couldn't return " + item.Stock + " of item: " + item.Name; */
-            
 
-        [HttpPost]
-        public async void AddItem(int barCode, string Description, int stock)
+        [HttpPost("addStock")]
+        public async void AddStock(int barCode, int stock)
         {
-            Item i = db.Items.Find(barCode);
+            WarehouseItem i = db.Stock.Find(barCode);
 
-        if (i == null)
+            if (i == null)
 
-            db.Add(new Item()
             {
-                BarCode = barCode,
-                Description = Description,
-                Stock = stock,
-              
+                
+            }
 
-            });
-
-        else
-        {
-                i.Stock += stock;
+            else
+            {
+                i.amount += stock;
 
                 await db.SaveChangesAsync();
 
-         }
+            }
         }
 
-        public IList<Item> ShowAllItems()
+        public String ToStringOrder(List<WarehouseItem> order)
         {
-            return (IList<Item>) db.Items;
-            
+            foreach (var item in order)
+                return "could not find" + item.amount + " of" + item.name;
+
+            return " order not successful";
         }
 
     }

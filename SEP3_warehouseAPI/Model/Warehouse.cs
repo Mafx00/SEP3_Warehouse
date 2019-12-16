@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace SEP3_warehouseAPI.Models
+namespace SEP3_warehouseAPI.Model
 {
     public class Warehouse
     {
@@ -13,6 +9,6 @@ namespace SEP3_warehouseAPI.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long WarehouseId { get; set; }
         public string Location { get; set; }
-        public ICollection<Item> items { get; set; }
+        public ICollection<WarehouseItem> items { get; set; }
     }
 }
