@@ -9,7 +9,7 @@ namespace SEP3_warehouseAPI.Model
     {
         public int orderId { get; set; }
         public string account { get; set; }
-        public string orderedItems { get; set; }
+        public IEnumerable<WarehouseItem> orderedItems { get; set; }
         public string orderInfo { get; set; }
 
     }
