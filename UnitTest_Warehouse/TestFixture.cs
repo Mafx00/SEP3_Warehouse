@@ -17,10 +17,10 @@ namespace UnitTest_Warehouse
         }
         public SqliteConnection ConnectionFactory() => new SqliteConnection("DataSource=:memory:");
 
-        public DbContextOptions<TContext> ModelDbOptionsFactory(SqliteConnection connection)
-        {
-            return new DbContextOptionsBuilder<TContext>().UseNpgsql(connection).Options;
-        }
+        public DbContextOptions<TContext> ModelDbOptionsFactory(SqliteConnection connection) =>
+            new DbContextOptionsBuilder<TContext>()
+            .UseSqlite(connection)
+            .Options;
 
         public async Task RunWithDatabaseAsync<TResult, TArrange>(
             Func<TContext, Task<TArrange>> arrange,
@@ -33,23 +33,42 @@ namespace UnitTest_Warehouse
             try
             {
                 var modelOpts = ModelDbOptionsFactory(modelDb);
-                using var modelContext = ContextFactory(modelOpts);
-                await modelContext.Database.EnsureCreatedAsync();
+                using (var modelContext = ContextFactory(modelOpts))
+                {
+                    await modelContext.Database.EnsureCreatedAsync();
 
-                // Arrange
-                TArrange arrangeVar = default;
-                if (arrange != null)
-                    arrangeVar = await arrange.Invoke(modelContext);
-                // Act
-                var result = await act.Invoke(modelContext, arrangeVar);
-                // Assert
-                assert.Invoke(result, arrangeVar, modelContext);
+                    // Arrange
+                    TArrange arrangeVar = default;
+                    if (arrange != null)
+                        arrangeVar = await arrange.Invoke(modelContext);
+                    // Act
+                    var result = await act.Invoke(modelContext, arrangeVar);
+                    // Assert
+                    assert.Invoke(result, arrangeVar, modelContext);
+                }
             }
             finally
             {
                 await modelDb.CloseAsync();
             }
         }
+
+        public async Task RunWithDatabaseAsync<TResult, TArrange>(
+            Func<TContext, TArrange> arrange,
+            Func<TContext, TArrange, Task<TResult>> act,
+            Action<TResult, TArrange, TContext> assert)
+        {
+            await RunWithDatabaseAsync(db => Task.FromResult(arrange(db)), act, assert);
+        }
+
+        public async Task RunWithDatabaseAsync<TResult, TArrange>(
+            Func<TContext, TArrange> arrange,
+            Func<TContext, TArrange, TResult> act,
+            Action<TResult, TArrange, TContext> assert)
+        {
+            await RunWithDatabaseAsync(db => Task.FromResult(arrange(db)), (t1, t2) => Task.FromResult(act(t1, t2)), assert);
+        }
+
         public async Task RunWithDatabaseAsync<TResult, TArrange>(
             Func<TContext, Task<TArrange>> arrange,
             Func<TContext, TArrange, Task<TResult>> act,

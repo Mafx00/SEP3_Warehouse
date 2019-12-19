@@ -106,10 +106,10 @@ namespace SEP3_warehouseAPI.Controllers
         }
 
         [HttpGet("getAll")]
-        public IList<WarehouseItem> ShowAllItems()
+        [ProducesResponseType(typeof(IList<WarehouseItem>), 200)]
+        public IActionResult ShowAllItems()
         {
-            return (IList<WarehouseItem>)db.Stock;
-
+            return Ok(db.Stock.ToList());
         }
 
 

@@ -1,15 +1,16 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SEP3_warehouseAPI.Controllers;
 using SEP3_warehouseAPI.Model;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using FluentAssertions;
 using Xunit;
+using System.Linq;
 
 namespace UnitTest_Warehouse
 {
-    [TestClass]
     public class WarehouseControllerTest
     {
         private readonly TestFixture<SEP3_warehouseAPI.Data.WarehouseContext> fixture = new TestFixture<SEP3_warehouseAPI.Data.WarehouseContext>(m => new SEP3_warehouseAPI.Data.WarehouseContext(m));
@@ -17,22 +18,21 @@ namespace UnitTest_Warehouse
         [Fact]
         public async Task GetAllItemsTest()
         {
-           
-
             await fixture.RunWithDatabaseAsync(
-                arrange: db => db.Stock,
-                act: async (db, count) => new WarehouseController(db).ShowAllItems(),
-                assert: (result, count) => Count(result).Equals(count));
-        }
-
-        private int Count(IList<WarehouseItem> l)
-        {
-            return l.Count;
+                arrange: db => new WarehouseController(db),
+                act: (db, controller) => controller.ShowAllItems(),
+                assert: (result, _, db) =>
+                {
+                    result.Should().BeOfType<OkObjectResult>();
+                    result.As<OkObjectResult>().Value.Should().BeOfType<List<WarehouseItem>>();
+                    result.As<OkObjectResult>().Value.As<IList<WarehouseItem>>().Should().HaveCount(db.Stock.Count());
+                });
         }
 
         [Fact]
         public async Task CheckOrderTest()
         {
+            //this test is useless at the moment ;)
             Order o = new Order()
             {
                 account = "tim",
