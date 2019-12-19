@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using System.Text.Json.Serialization;
 using SEP3_warehouseAPI.Data;
 using SEP3_warehouseAPI.Model;
 using System.Text.Json;
+using Microsoft.AspNetCore.Http;
 
 namespace SEP3_warehouseAPI.Controllers
 {
@@ -22,19 +21,18 @@ namespace SEP3_warehouseAPI.Controllers
             db = context;
         }
 
-        [ProducesResponseType(typeof(CheckOrderResponse), 200)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         [HttpPost("checkOrder")]
-        public Order Get([FromBody]Order order)
+        public IActionResult Get([FromBody]Order order)
         {   
-            
-            string json = JsonSerializer.Serialize(order.orderedItems);
-            IEnumerable<WarehouseItem> itemsordered = JsonSerializer.Deserialize<IEnumerable<WarehouseItem>>(json);
+          //  string json = JsonSerializer.Serialize(order.orderedItems);
+          //  IEnumerable<WarehouseItem> itemsordered = JsonSerializer.Deserialize<IEnumerable<WarehouseItem>>(json);
 
-            //  IEnumerable<int?> itemsordered = JsonSerializer.Deserialize<Items>(json.ToString()).items.Select(i=>i.barcode);
+            var itemsOrdered = order.orderedItems;
 
             var missingitems = new List<WarehouseItem>();
 
-            foreach (var item in itemsordered)
+            foreach (var item in itemsOrdered)
             {
                 WarehouseItem i = db.Stock.Where(b=>b.barcode == (int)item.barcode).SingleOrDefault();
                
@@ -74,25 +72,28 @@ namespace SEP3_warehouseAPI.Controllers
             }
 
             order.orderInfo = ToStringOrder(missingitems);
-            return order;
+            return Ok(order);
         }
 
+
         [HttpPost("restock")]
-        public String AddItem(int id, int barCode, string name, string Description, int stock)
+        public void AddItem(int barCode, string name, string description, int stock)
         {
             WarehouseItem i = db.Stock.Find(barCode);
 
             if (i == null)
+            {
 
                 db.Add(new WarehouseItem()
                 {
                     name = name,
                     barcode = barCode,
-                    description = Description,
+                    description = description,
                     amount = stock,
 
-
                 });
+
+            }
 
             else
             {
@@ -102,8 +103,8 @@ namespace SEP3_warehouseAPI.Controllers
 
             }
 
-            return "successful";
         }
+
         [HttpGet("getAll")]
         public IList<WarehouseItem> ShowAllItems()
         {
@@ -117,28 +118,21 @@ namespace SEP3_warehouseAPI.Controllers
         {
             WarehouseItem i = db.Stock.Find(barCode);
 
-            if (i == null)
+            if (i != null)
 
-            {
-                
-            }
-
-            else
             {
                 i.amount += stock;
 
                 await db.SaveChangesAsync();
-
             }
+
         }
 
-        public String ToStringOrder(List<WarehouseItem> order)
+        private  String ToStringOrder(List<WarehouseItem> order)
         {
-            foreach (var item in order)
-                return "could not find" + item.amount + " of" + item.name;
-
-            return " order not successful";
+            return "could not find the following items:" + string.Join(",", order.Select(x => x.name) + string.Join(",", order.Select(x => x.amount)));
         }
+       
 
     }
 }
